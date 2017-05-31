@@ -1,3 +1,16 @@
+# coding:utf-8
+
+'''
+目的：
+得到最流行的电影。返回用户评分数以及电影ID。
+
+难点：
+如何想到在reducer_count_ratings()中yield None, (sum(values), key)
+
+执行：
+python2 MostPopularMovie.py ../data/ml-100k/u.data 
+'''
+
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 
