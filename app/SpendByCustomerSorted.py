@@ -1,3 +1,13 @@
+
+# coding:utf-8
+
+'''
+执行：
+python SpendByCustomerSorted.py ../data/customer-orders.csv 
+
+自动根据key排序
+'''
+
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 

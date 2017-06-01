@@ -6,8 +6,8 @@ WORD_REGEXP = re.compile(r"[\w']+")
 
 class MRWordFrequencyCount(MRJob):
 
-    def mapper(self, _, lin):
-        words = lint.split()
+    def mapper(self, _, line):
+        words = line.split()
         for word in words:
             yield word.lower(), 1
     

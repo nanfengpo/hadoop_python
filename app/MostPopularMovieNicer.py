@@ -1,12 +1,13 @@
-
+﻿
 # coding:utf-8
 
 '''
 目的：
-得到最流行的电影。返回用户评分数以及电影ID。
+得到最流行的电影。返回用户评分数以及电影名称。
 
 难点：
-如何想到在reducer_count_ratings()中yield None, (sum(values), key)
+- 如何想到在reducer_count_ratings()中yield None, (sum(values), self.movieNames[key])
+- u.data是utf-8格式，u.item是utf-16格式
 
 执行：
 python2 MostPopularMovieNicer.py --items ../data/ml-100k/u.item <../data/ml-100k/u.data 
@@ -30,14 +31,15 @@ class MostPopularMovie(MRJob):
         ]
         
     def mapper_get_ratings(self, _, line):
+        # 默认用utf-8编码打开文件，而u.data正是utf-8编码，这样用utf8编码将其正确打开
         (userID, movieID, rating, timestamp) = line.split('\t')
         yield movieID, 1
         
     def reducer_init(self):
         self.movieNames = {} # dic = {movieID, movieName}
 
-        # python2默认用ascii编码打开文件，而u.item是utf16编码，这样用ascii编码将其encode为字符串会出错，
-        # 因此需要使用codecs.open将其以utf-16编码打开
+        # 默认用utf-8编码打开文件，而u.item是utf16编码，这样用utf8编码将其打开会出错，
+        # 因此需要使用codecs.open将其以utf-16编码打开。这样的话u.data和u.item的内容就可以相等
         with codecs.open("u.item",encoding='utf16') as f:
             for line in f:
                 fields = line.split('|')

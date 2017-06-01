@@ -1,21 +1,42 @@
+
+# coding:utf-8
+
+'''
+目的：
+得到所有关联程度大于0.95的两个电影。
+
+注意：
+- Marvel-Graph.txt文件的每一行是每部电影中出场的英雄ID
+- Marvel-Names.txt文件是英雄ID与英雄名的对应表
+- 如何想到在mapper_prep_for_sort()中yield None, (friendsCount, heroName)
+
+
+执行：
+
 # To run locally:
-# !python MovieSimilarities.py --items=ml-100k/u.item ml-100k/u.data > sims.txt
+# python MovieSimilarities.py --items ../data/ml-100k/u.item  ../data/ml-100k/u.data > sims.txt
+# 需要运行8分钟
 
-# To run on a single EMR node:
-# python MovieSimilarities.py -r emr --items=ml-100k/u.item ml-100k/u.data > sims.txt
+# To run on hadoop cluster:
+# python MovieSimilarities.py -r hadoop --items ../data/ml-100k/u.item  ../data/ml-100k/u.data > sims.txt
+# 三台机器集群时需要运行5分钟
 
-# To run on 4 EMR nodes:
-# python MovieSimilarities.py -r emr --num-ec2-instances 4 --items=ml-100k/u.item ml-100k/u.data > sims.txt
+结果：
+保存在sims.txt。例如第132453行，与星球大战（1977）相似度最高的两部电影分别是星球大战（1980）、星球大战（1983）
+"Star Wars (1977)"	["Return of the Jedi (1983)", 0.9857230861253026, 480]
+"Star Wars (1977)"	["Empire Strikes Back, The (1980)", 0.9895522078385338, 345]
 
-# Troubleshooting EMR jobs (subsitute your job ID):
-# python -m mrjob.tools.emr.fetch_logs --find-failure j-1NXMMBNEQHAFT
-
+'''
 
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 from math import sqrt
 
 from itertools import combinations
+
+import codecs
+import time
+
 
 class MovieSimilarities(MRJob):
 
@@ -27,7 +48,7 @@ class MovieSimilarities(MRJob):
         # Load database of movie names.
         self.movieNames = {}
 
-        with open("u.item") as f:
+        with codecs.open("u.item",encoding='utf16') as f:
             for line in f:
                 fields = line.split('|')
                 self.movieNames[int(fields[0])] = fields[1]
@@ -43,12 +64,13 @@ class MovieSimilarities(MRJob):
                     reducer=self.reducer_output_similarities)]
 
     def mapper_parse_input(self, key, line):
-        # Outputs userID => (movieID, rating)
+        # Outputs: userID => (movieID, rating)
         (userID, movieID, rating, timestamp) = line.split('\t')
         yield  userID, (movieID, float(rating))
 
     def reducer_ratings_by_user(self, user_id, itemRatings):
         #Group (item, rating) pairs by userID
+        # 把同一个用户的所有评分放在一起，形成一个列表
 
         ratings = []
         for movieID, rating in itemRatings:
@@ -76,6 +98,7 @@ class MovieSimilarities(MRJob):
     def cosine_similarity(self, ratingPairs):
         # Computes the cosine similarity metric between two
         # rating vectors.
+        # 返回两个电影的相似度（score）和有多少对rating（也就是有多少用户同时为这两个电影打分）
         numPairs = 0
         sum_xx = sum_yy = sum_xy = 0
         for ratingX, ratingY in ratingPairs:
@@ -103,6 +126,7 @@ class MovieSimilarities(MRJob):
 
         # Enforce a minimum score and minimum number of co-ratings
         # to ensure quality
+        # 只保留相似度大于0.95且超过10人同时打分的电影对
         if (numPairs > 10 and score > 0.95):
             yield moviePair, (score, numPairs)
 
@@ -124,4 +148,7 @@ class MovieSimilarities(MRJob):
 
 
 if __name__ == '__main__':
+    time1 = time.time()
     MovieSimilarities.run()
+    time2 = time.time()
+    # print time2-time1
