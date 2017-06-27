@@ -3,6 +3,9 @@
 
 '''
 找出平均年薪（AnnualSalary） Top10的行业
+相比较与avg_salary.py的改进：
+修复了在第1个step中combiner会丢弃数据的情况，创建了新的avgcombiner()，去除了c<3时丢弃数据的情况。
+只在avgreducer中丢弃数据
 '''
 
 from mrjob.job import MRJob
@@ -16,7 +19,7 @@ class salaryavg(MRJob):
     def steps(self):
         return [
             MRStep(mapper=self.avgmapper,
-                   #combiner=self.avgreducer, # 【注意】这里有无combiner会对结果造成影响！有的话会产生有误差的结果，因为combiner可能会丢弃数据
+                   combiner=self.avgcombiner, # 【注意】这里有无combiner会对结果造成影响！有的话会产生有误差的结果
                    reducer=self.avgreducer),
             MRStep(mapper=self.ttmapper,
                    combiner=self.ttreducer,
@@ -38,7 +41,8 @@ class salaryavg(MRJob):
 
         yield dic['JobTitle'], (int(float(dic['AnnualSalary'][1:])), 1) #这里加上int()的目的，是只保留整数，否则会计算到小数点后8位
 
-    def avgreducer(self, key, values):
+    def avgcombiner(self, key, values):
+        # key是职业
         # print('type(values):',type(values))
         s = 0
         c = 0
@@ -53,7 +57,26 @@ class salaryavg(MRJob):
 
         # 【注意】这里会产生问题！我们知道，一个combiner对应一个mapper，也就是说一个combiner处理一个mapper产生的所有数据
         # 在一个combiner当中，若对应的这个mapper产生的某个职业的样本数小于3个，则直接舍弃，但可能其他mapper中还有该职业的样本！
-        # 因此combiner当中不能舍弃！应该将combiner和reducer区分开来！只在reducer中加上判断语句，去除总样本数小于某个值（例如50）的职业
+        # 因此combiner当中不能舍弃！应该将combiner和reducer区分开来！只在reducer中加上判断语句，去除总样本数小于某个值（例如3）的职业
+        yield key, (s/c, c)
+
+    def avgreducer(self, key, values):
+        # key是职业
+        # print('type(values):',type(values))
+        s = 0
+        c = 0
+
+        for average, count in values:
+            s += average * count
+            c += count
+            # 只有在第一个step中加上combiner=self.avgreducer，才会出现count>1的情况（在reducer中）
+            # 否则，直接由avgmapper传给reducer，会导致values中每个count都为1
+            # if count>1:
+                # print("======count>1=====\n",count)
+
+        # 【注意】这里会产生问题！我们知道，一个combiner对应一个mapper，也就是说一个combiner处理一个mapper产生的所有数据
+        # 在一个combiner当中，若对应的这个mapper产生的某个职业的样本数小于3个，则直接舍弃，但可能其他mapper中还有该职业的样本！
+        # 因此combiner当中不能舍弃！应该将combiner和reducer区分开来！只在reducer中加上判断语句，去除总样本数小于某个值（例如3）的职业
         if c > 3:
             yield key, (s/c, c)
         else:
