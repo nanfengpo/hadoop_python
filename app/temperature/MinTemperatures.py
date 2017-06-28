@@ -1,3 +1,11 @@
+
+# coding:utf-8
+
+'''
+求1800.csv文件中，每个城市（第1列）的最低温度
+
+'''
+
 from mrjob.job import MRJob
 
 class MRMinTemperature(MRJob):

@@ -1,3 +1,15 @@
+
+# coding:utf-8
+'''
+【级别】
+    median
+【目的】
+    就是wordcount,求出每个单词的出现次数，并排序输出 
+【执行】
+    $ python WordFrequencySorted.py ./data/Book.txt >output.txt
+
+
+'''
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 import re

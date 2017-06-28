@@ -49,7 +49,7 @@ class MRWordCount(MRJob):
         pattern = re.compile(r'(\w+)')
         for word in re.findall(pattern,line):
             if word.isalpha():
-                yield (word.lower(),1)
+                yield [word.lower(),1]
 
 
 

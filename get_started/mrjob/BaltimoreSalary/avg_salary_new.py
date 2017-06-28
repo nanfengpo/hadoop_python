@@ -19,7 +19,7 @@ class salaryavg(MRJob):
     def steps(self):
         return [
             MRStep(mapper=self.avgmapper,
-                   combiner=self.avgcombiner, # 【注意】这里有无combiner会对结果造成影响！有的话会产生有误差的结果
+                   combiner=self.avgcombiner, # 【注意】这里有无combiner都会得到正确结果
                    reducer=self.avgreducer),
             MRStep(mapper=self.ttmapper,
                    combiner=self.ttreducer,
@@ -92,6 +92,7 @@ class salaryavg(MRJob):
 
     def ttreducer(self, key, values):
         #print("values:")
+        # 求top10的惯用做法
         topten = []
         for average, job in values:
             topten.append((average, job))

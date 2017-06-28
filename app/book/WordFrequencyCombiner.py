@@ -1,3 +1,13 @@
+
+# coding:utf-8
+'''
+【级别】
+    simple
+【目的】
+    就是wordcount,加上了一个combiner
+
+'''
+
 from mrjob.job import MRJob
 from mrjob.step import MRStep
 import re

@@ -2,8 +2,12 @@
 # coding:utf-8
 
 '''
-执行：
-python SpendByCustomerSorted.py ../data/customer-orders.csv 
+【级别】
+    median
+【目的】
+    求出每位消费者的所有支出，并排序
+【执行】
+    $ python SpendByCustomerSorted.py ./data/customer-orders.csv 
 
 自动根据key排序
 '''

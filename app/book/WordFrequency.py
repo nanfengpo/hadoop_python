@@ -1,12 +1,18 @@
-from mrjob.job import MRJob
-import re
 
-WORD_REGEXP = re.compile(r"[\w']+")
+# coding:utf-8
+'''
+【级别】
+    simple
+【目的】
+    就是wordcount,求出每个单词的出现次数
+    
+'''
+from mrjob.job import MRJob
 
 class MRWordFrequency(MRJob):
 
     def mapper(self, _, line):
-        words = WORD_REGEXP.findall(line)
+        words = line.split()
         for word in words:
             yield word.lower(), 1
 
