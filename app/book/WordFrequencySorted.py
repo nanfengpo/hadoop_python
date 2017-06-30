@@ -2,7 +2,7 @@
 # coding:utf-8
 '''
 【级别】
-    median
+    Median
 【目的】
     就是wordcount,求出每个单词的出现次数，并排序输出 
 【执行】

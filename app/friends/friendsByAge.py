@@ -2,11 +2,14 @@
 # coding:utf-8
 
 '''
-目的：
-统计每个年龄的平均朋友个数。例如age年龄有total / numElements个朋友。
+【级别】
+    Easy
+    
+【目的】
+    统计每个年龄的平均朋友个数。例如age年龄有total / numElements个朋友。
 
-执行：
-python2 FriendsByAge.py ./data/fakefriends.csv
+【执行】
+    $ python2 FriendsByAge.py ./data/fakefriends.csv
 
 '''
 

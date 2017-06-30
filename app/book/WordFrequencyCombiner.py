@@ -2,7 +2,7 @@
 # coding:utf-8
 '''
 【级别】
-    simple
+    Easy
 【目的】
     就是wordcount,加上了一个combiner
 

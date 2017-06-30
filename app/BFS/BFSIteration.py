@@ -1,5 +1,11 @@
 
 # coding:utf-8
+'''
+【级别】
+    Hard
+    
+'''
+
 
 from mrjob.job import MRJob
 from mrjob.protocol import RawValueProtocol

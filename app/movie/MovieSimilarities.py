@@ -2,26 +2,23 @@
 # coding:utf-8
 
 '''
-目的：
-得到所有关联程度大于0.95的两个电影。
+【级别】
+    Hard
+    
+【目的】
+    得到所有关联程度大于0.95的两个电影。
 
-注意：
-- Marvel-Graph.txt文件的每一行是每部电影中出场的英雄ID
-- Marvel-Names.txt文件是英雄ID与英雄名的对应表
-- 如何想到在mapper_prep_for_sort()中yield None, (friendsCount, heroName)
-
-
-执行：
+【执行】
 
 # To run locally:
-# python MovieSimilarities.py --items ../data/ml-100k/u.item  ../data/ml-100k/u.data > sims.txt
+# python MovieSimilarities.py --items ./data/ml-100k/u.item  ./data/ml-100k/u.data > sims.txt
 # 需要运行8分钟
 
 # To run on hadoop cluster:
-# python MovieSimilarities.py -r hadoop --items ../data/ml-100k/u.item  ../data/ml-100k/u.data > sims.txt
+# python MovieSimilarities.py -r hadoop --items ./data/ml-100k/u.item  ./data/ml-100k/u.data > sims.txt
 # 三台机器集群时需要运行5分钟
 
-结果：
+【结果】
 保存在sims.txt。例如第132453行，与星球大战（1977）相似度最高的两部电影分别是星球大战（1980）、星球大战（1983）
 "Star Wars (1977)"	["Return of the Jedi (1983)", 0.9857230861253026, 480]
 "Star Wars (1977)"	["Empire Strikes Back, The (1980)", 0.9895522078385338, 345]
@@ -44,15 +41,6 @@ class MovieSimilarities(MRJob):
         super(MovieSimilarities, self).configure_options()
         self.add_file_option('--items', help='Path to u.item')
 
-    def load_movie_names(self):
-        # Load database of movie names.
-        self.movieNames = {}
-
-        with codecs.open("u.item",encoding='utf16') as f:
-            for line in f:
-                fields = line.split('|')
-                self.movieNames[int(fields[0])] = fields[1]
-
     def steps(self):
         return [
             MRStep(mapper=self.mapper_parse_input,
@@ -63,14 +51,17 @@ class MovieSimilarities(MRJob):
                     mapper_init=self.load_movie_names,
                     reducer=self.reducer_output_similarities)]
 
+    #第1个step：得到每个用户的所有评分信息(电影ID,评分)
     def mapper_parse_input(self, key, line):
+        # 得到u.data中每一行的打分情况
         # Outputs: userID => (movieID, rating)
         (userID, movieID, rating, timestamp) = line.split('\t')
         yield  userID, (movieID, float(rating))
 
     def reducer_ratings_by_user(self, user_id, itemRatings):
         #Group (item, rating) pairs by userID
-        # 把同一个用户的所有评分放在一起，形成一个列表
+        # 把同一个用户的所有评分(电影ID,评分)放在一起，形成一个列表ratings
+        # ratings是元组的列表
 
         ratings = []
         for movieID, rating in itemRatings:
@@ -78,6 +69,7 @@ class MovieSimilarities(MRJob):
 
         yield user_id, ratings
 
+    # 第2个step：得到每个用户的所有评分信息(电影ID,评分)
     def mapper_create_item_pairs(self, user_id, itemRatings):
         # Find every pair of movies each user has seen, and emit
         # each pair with its associated ratings
@@ -138,6 +130,15 @@ class MovieSimilarities(MRJob):
 
         yield (self.movieNames[int(movie1)], score), \
             (self.movieNames[int(movie2)], n)
+
+    def load_movie_names(self):
+        # Load database of movie names.
+        self.movieNames = {}
+
+        with codecs.open("u.item",encoding='utf16') as f:
+            for line in f:
+                fields = line.split('|')
+                self.movieNames[int(fields[0])] = fields[1]
 
     def reducer_output_similarities(self, movieScore, similarN):
         # Output the results.
