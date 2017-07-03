@@ -51,7 +51,9 @@ class MovieSimilarities(MRJob):
                     mapper_init=self.load_movie_names,
                     reducer=self.reducer_output_similarities)]
 
-    #第1个step：得到每个用户的所有评分信息(电影ID,评分)
+    # 【第1个step】
+    # - mapper：得到每一行的评分信息：userID, (movieID, float(rating))
+    # - reducer：得到每个用户的所有评分信息：user_id, ratings
     def mapper_parse_input(self, key, line):
         # 得到u.data中每一行的打分情况
         # Outputs: userID => (movieID, rating)
@@ -69,7 +71,9 @@ class MovieSimilarities(MRJob):
 
         yield user_id, ratings
 
-    # 第2个step：得到每个用户的所有评分信息(电影ID,评分)
+    # 【第2个step】
+    # - mapper：得到每两个电影的所有评分信息(movieID1, movieID2), (rating1, rating2)
+    # - reducer：得到相似度大于0.95且超过10人同时打分的电影对
     def mapper_create_item_pairs(self, user_id, itemRatings):
         # Find every pair of movies each user has seen, and emit
         # each pair with its associated ratings
@@ -90,7 +94,7 @@ class MovieSimilarities(MRJob):
     def cosine_similarity(self, ratingPairs):
         # Computes the cosine similarity metric between two
         # rating vectors.
-        # 返回两个电影的相似度（score）和有多少对rating（也就是有多少用户同时为这两个电影打分）
+        # 返回两个电影的余弦相似度（score）和有多少对rating（也就是有多少用户同时为这两个电影打分）
         numPairs = 0
         sum_xx = sum_yy = sum_xy = 0
         for ratingX, ratingY in ratingPairs:
@@ -122,6 +126,9 @@ class MovieSimilarities(MRJob):
         if (numPairs > 10 and score > 0.95):
             yield moviePair, (score, numPairs)
 
+    # 【第3个step】
+    # - mapper：得到每两个电影的所有评分信息(movieID1, movieID2), (rating1, rating2)
+    # - reducer：得到相似度大于0.95且超过10人同时打分的电影对
     def mapper_sort_similarities(self, moviePair, scores):
         # Shuffle things around so the key is (movie1, score)
         # so we have meaningfully sorted results.

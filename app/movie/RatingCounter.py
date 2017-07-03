@@ -1,3 +1,17 @@
+# coding:utf-8
+
+'''
+【级别】
+    Easy
+
+【目的】
+    得到评分的分值计数，即1分有多少人打，2分有多少人打
+    
+【输入文件】
+  ./data/ml-100k/u.data 
+  
+'''
+
 from mrjob.job import MRJob
 
 class MRRatingCounter(MRJob):
