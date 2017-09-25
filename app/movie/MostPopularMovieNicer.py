@@ -26,7 +26,7 @@ import codecs
 class MostPopularMovie(MRJob):
     def configure_options(self):
         super(MostPopularMovie, self).configure_options()
-        self.add_file_option('--items', help='Path to u.item')
+        self.add_file_option('--item', help='Path to u.item')
     
     def steps(self):
         return [
