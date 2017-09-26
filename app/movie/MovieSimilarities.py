@@ -72,7 +72,7 @@ class MovieSimilarities(MRJob):
         yield user_id, ratings
 
     # 【第2个step】
-    # - mapper：得到每两个电影的所有评分信息(movieID1, movieID2), (rating1, rating2)
+    # - mapper：得到每两个电影的所有评分信息：(movieID1, movieID2), (rating1, rating2)
     # - reducer：得到相似度大于0.95且超过10人同时打分的电影对
     def mapper_create_item_pairs(self, user_id, itemRatings):
         # Find every pair of movies each user has seen, and emit
@@ -127,7 +127,7 @@ class MovieSimilarities(MRJob):
             yield moviePair, (score, numPairs)
 
     # 【第3个step】
-    # - mapper：得到每两个电影的所有评分信息(movieID1, movieID2), (rating1, rating2)
+    # - mapper：得到每个电影与其他所有相似度大于0.95且超过10人同时打分的电影的信息，包括相似度score和同时为这两个电影打分的人数n：(movie1, score), (movie2, n)
     # - reducer：得到相似度大于0.95且超过10人同时打分的电影对
     def mapper_sort_similarities(self, moviePair, scores):
         # Shuffle things around so the key is (movie1, score)
@@ -138,7 +138,7 @@ class MovieSimilarities(MRJob):
         yield (self.movieNames[int(movie1)], score), \
             (self.movieNames[int(movie2)], n)
 
-    def load_movie_names(self):
+    def load_movie_names(self):  # mapper_int
         # Load database of movie names.
         self.movieNames = {}
 
@@ -148,6 +148,11 @@ class MovieSimilarities(MRJob):
                 self.movieNames[int(fields[0])] = fields[1]
 
     def reducer_output_similarities(self, movieScore, similarN):
+        # 注意：movieScore是元组；而similarN是元组的列表，其中元组包含了和movie1这部电影相似度为score的所有电影以及同时打分人数
+        # 输出的时候是按照电影名称和相似度来排序的。首先按照电影名称来排序，同一个电影下按照相似度由底到高来排序。
+        # 1）因为movieScore是键，而且是元组，所以首先会根据movieScore[0]也就是movie1来排序；
+        # 2）可能有很多movie2和movie1相似度大于0.95，因此也要对这些电影按照相似度排序。
+        #    实际上shuffle&sort已经排好序了，因为score是movieScore[1]，也是movieScore这个键的一部分。对同一个movieScore[0]，就会按照元组的第二个元素movieScore[1]来排序
         # Output the results.
         # Movie => Similar Movie, score, number of co-ratings
         movie1, score = movieScore
