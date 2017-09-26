@@ -2,10 +2,10 @@
 # coding:utf-8
 
 '''
-找出平均年薪（AnnualSalary） Top10的行业
+原始代码
+找出平均年薪（AnnualSalary） Top10的行业JobTitle
 相比较与avg_salary.py的改进：
-修复了在第1个step中combiner会丢弃数据的情况，创建了新的avgcombiner()，去除了c<3时丢弃数据的情况。
-只在avgreducer中丢弃数据
+增加了combiner：创建了新的avgcombiner()。且去除了c<3时丢弃数据的情况，只在avgreducer中丢弃数据
 '''
 
 from mrjob.job import MRJob
